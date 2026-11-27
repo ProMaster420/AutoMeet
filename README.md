@@ -1,100 +1,183 @@
 # AutoMeet
 
-A small Chrome extension that joins your scheduled Google Meet and Zoom meetings for you, with the camera and microphone off, and can leave at a time you choose.
+### Your meetings, right on time.
 
-Everything happens in a compact popup. There is no server, no AutoMeet account, and nothing leaves your browser.
+Never worry about forgetting to join an online class, missing a lecture, or staying in a meeting longer than you intended.
+
+**AutoMeet** is a lightweight Chrome extension that automatically joins your scheduled Google Meet and Zoom meetings, with your camera and microphone turned off by default. Set when you want to join, optionally choose when to leave, and let AutoMeet handle the rest.
+
+Whether you're a student attending online classes, a teacher managing virtual lessons, or someone who spends their day in online meetings, AutoMeet helps make your schedule a little easier to manage.
+
+---
+
+## Why AutoMeet?
+
+Life gets busy. Between classes, assignments, work and everything else, remembering every meeting can become another thing to worry about.
+
+AutoMeet takes care of the little things so you can focus on what matters.
+
+- **Never miss a meeting.** Schedule your meetings ahead of time and let AutoMeet open them when it's time to join.
+- **Your privacy comes first.** Meetings are prepared with your camera and microphone turned off by default.
+- **Leave on your own schedule.** Set an optional leave time and AutoMeet will handle leaving when the time comes.
+- **Keep things simple.** Everything is managed from a small, straightforward Chrome popup.
+- **No extra accounts needed.** Your meetings and settings are stored locally in your browser.
 
 ## Features
 
-- **Auto-join** Google Meet and Zoom at a set date and time.
-- **Camera and microphone off** before joining, checked afterwards. If a device you asked to be off is still on, AutoMeet won't join.
-- **Optional auto-leave.** Leave the time empty and AutoMeet never leaves for you.
-- **Heads-up before joining:** a chime and a notification, then an adjustable wait (0 to 120 seconds) with **Join now** and **Cancel**.
-- **Google account per meeting** for Meet, plus a default account.
-- **Clear statuses:** Scheduled, Preparing, Joining, Waiting for host, In meeting, Leaving, Completed, Failed, Cancelled. Failures say why.
-- **Emergency stop** for everything that's about to join.
-- Handles waiting rooms, missed alarms, browser restarts, duplicate events and overlapping meetings.
+### Automatic meeting scheduling
 
-## Install
+Add your Google Meet or Zoom meeting link, choose a date and time, and AutoMeet takes care of opening the meeting when it's due.
 
-AutoMeet isn't on the Chrome Web Store, so load it as an unpacked extension.
+### Optional automatic leaving
 
-1. Clone or download this repository and keep the folder somewhere permanent.
-2. Open `chrome://extensions` and turn on **Developer mode**.
-3. Click **Load unpacked** and select the folder that contains `manifest.json`.
-4. Pin AutoMeet from the puzzle-piece menu.
+Choose a leave time when scheduling your meeting. Don't need one? Simply leave it empty. AutoMeet will let you stay in the meeting until you leave manually.
 
-Requires Chrome 116 or newer. After pulling changes, click the refresh icon on AutoMeet's card in `chrome://extensions`.
+### Google account selection
 
-## Use
+Have multiple Google accounts? Choose which account AutoMeet should use when opening a Google Meet meeting.
 
-1. Click the AutoMeet icon, then **Add meeting**.
-2. Paste a Meet or Zoom link. The platform is detected and the link is validated.
-3. Set **Join at**, and optionally **Leave at**.
-4. For Meet, choose a Google account or keep the default.
-5. Save. Edit, cancel or delete from the meeting's card.
+### Camera and microphone protection
 
-### Settings
+AutoMeet attempts to disable your camera and microphone before joining. It verifies their state and won't proceed if a device configured to be off is still enabled.
 
-| Setting | What it does |
-| --- | --- |
-| Default Google Meet account | Used for Meet meetings that don't pick their own. |
-| Camera / microphone | Both off by default. |
-| Sound and notification | Each can be turned off. **Play test sound** previews the chime. |
-| Wait before opening | 0 to 120 seconds (default 10). |
-| Emergency stop | Cancels every upcoming join and any join in progress. Meetings you're already in are untouched. |
+### Meeting status tracking
 
-## How it works
+Keep track of what's happening with your scheduled meetings:
 
-- **Scheduling:** meetings live in `chrome.storage.local`, preferences in `chrome.storage.sync`. `chrome.alarms` are derived from storage and rebuilt whenever the background service worker starts, so a restart loses nothing. No JavaScript timers schedule joins.
-- **State machine:** every status change is a guarded transition inside a serialized storage transaction. A duplicate alarm, a double click or a late message can't start two joins or two leaves.
-- **Recovery:** a join missed by up to 10 minutes still happens; older ones become Failed ("Missed"). Stalled joins fail after 4 minutes. Closing the tab, restarting Chrome and cancelling are all handled.
-- **Platform adapters:** Meet and Zoom each have their own content script. They only act in tabs AutoMeet opened for a live run, never in a Meet or Zoom tab you opened yourself.
-- **Zoom:** AutoMeet opens Zoom's browser client directly, so there is no "open the Zoom app?" prompt. Personal `/my/` links use the "Join from your browser" link.
-- **Meet accounts:** Meet is opened with `?authuser=<email>`, which works if that account is already signed in to Chrome. If it isn't, or Meet opens as a different account, AutoMeet stops before joining and says so.
+- Scheduled
+- Preparing
+- Joining
+- Waiting for host
+- In meeting
+- Leaving
+- Completed
+- Failed
+- Cancelled
 
-```
-manifest.json
-src/lib/          constants, platform detection, validation, time, storage
-src/background/   scheduler (alarms), lifecycle (state machine), alerts, service worker
-src/content/      shared engine plus Meet, Zoom and Google sign-in adapters
-src/offscreen/    plays the chime (service workers can't play audio)
-popup/            popup UI: list, form and settings views
-tests/            node:test suite
-```
+### Join notifications and countdown
 
-## What AutoMeet will not do
+Get a notification and a short chime before a scheduled meeting opens. A countdown gives you time to prepare, with options to join immediately or cancel the scheduled join.
 
-It never signs in for you, solves CAPTCHAs, enters a passcode it wasn't given, skips a waiting room, or joins as a guest. If a platform requires any of that, the meeting is marked **Failed** with the reason and the tab is left open for you. At a waiting room it waits up to an hour.
+### Emergency stop
 
-When leaving, it clicks the platform's Leave button (never Zoom's "End Meeting for All"). If it can't find the button, it closes the tab and says so on the card.
+Need to stop everything? Emergency Stop cancels upcoming automatic joins and aborts joins in progress without affecting meetings you're already attending.
 
-## Permissions
+---
 
-`alarms` (scheduling), `storage` (meetings and settings), `identity` and `identity.email` (suggest the account signed in to Chrome), `notifications` (the heads-up), `offscreen` (the chime). Content scripts run only on `meet.google.com`, `zoom.us`, `zoomgov.com` and `accounts.google.com`.
+## Getting Started
 
-## Limitations
+### Requirements
 
-- **Chrome must be running** at the join time. Alarms can't start a closed browser, and timing is roughly minute-precise, so schedule at least a minute ahead.
-- **Meet and Zoom have no automation API.** The adapters read the pages the way a person would. They have not been verified against the live sites, and if a page changes, the result is a clear Failed status rather than a false success. Please report anything that breaks.
-- **Meet's interface should be in English**, because some buttons are matched by their text.
-- **Camera and microphone permission:** if Chrome hasn't granted Meet access, AutoMeet picks "Continue without microphone and camera" when both are meant to be off. Otherwise, allow it once for `meet.google.com`.
-- **Zoom** needs a saved display name (join once manually) and a meeting that allows joining from the browser.
-- The meeting tab opens in the foreground and should stay open.
+- Google Chrome 116 or newer.
+- An active internet connection.
+- A signed-in Google account for Google Meet, or an appropriate Zoom browser session.
+- Chrome running when a scheduled meeting is due.
 
-## Development
+### Installation
+
+AutoMeet currently supports manual installation through Chrome's Developer Mode.
+
+1. Download or clone this repository.
+2. Open `chrome://extensions` in Google Chrome.
+3. Enable **Developer mode**.
+4. Click **Load unpacked**.
+5. Select the AutoMeet project folder containing `manifest.json`.
+6. Pin AutoMeet to your Chrome toolbar for easy access.
+
+That's it! AutoMeet is ready to use.
+
+### Scheduling your first meeting
+
+1. Click the AutoMeet icon in your Chrome toolbar.
+2. Select **Add meeting**.
+3. Give your meeting a name and paste its Google Meet or Zoom link.
+4. Choose your preferred join date and time.
+5. Optionally configure a leave date and time.
+6. If you're scheduling a Google Meet, select the Google account you want to use.
+7. Save your meeting.
+
+Your meeting will now appear in the scheduled meeting list.
+
+You can edit, cancel or delete scheduled meetings whenever you need to.
+
+---
+
+## How It Works
+
+AutoMeet uses Chrome's built-in extension capabilities to manage meeting schedules and browser interactions.
+
+- Meeting information is stored locally using Chrome Storage.
+- Scheduled actions are managed through Chrome Alarms.
+- Separate integrations handle Google Meet and Zoom.
+- Meeting states are tracked to prevent duplicate joining or leaving actions.
+- Scheduled alarms are reconstructed when the extension's background service worker restarts.
+
+**No AutoMeet account, external backend or cloud database is required.**
+
+## Privacy
+
+Your meetings are personal, and your scheduling information should stay that way.
+
+AutoMeet is designed to work locally within your browser.
+
+- Meeting details are stored in Chrome's local storage.
+- Preferences are stored using Chrome's sync storage.
+- No AutoMeet registration is required.
+- No meeting recordings, transcripts or conversation data are collected.
+- Google account selection does not require AutoMeet OAuth authentication.
+
+For Google Meet, AutoMeet uses the selected account's existing Chrome sign-in session. It does not obtain or store your Google password.
+
+---
+
+## Important Limitations
+
+AutoMeet automates interactions with the existing Google Meet and Zoom web interfaces. There are a few things worth knowing before using it.
+
+- **Chrome must be running.** AutoMeet cannot open meetings while Chrome is completely closed. Meetings missed by up to 10 minutes may still be attempted when Chrome starts again.
+- **Meeting admission is not guaranteed.** Waiting rooms, host approval, authentication and other platform restrictions still apply.
+- **Google accounts must already be signed in.** AutoMeet cannot sign you into an account automatically.
+- **Zoom browser requirements apply.** Zoom meetings must support browser joining, and a saved display name may be required.
+- **Platform interfaces can change.** Automated interactions depend on the current Google Meet and Zoom web interfaces.
+- **Real meeting integration requires testing.** The integrations have not yet been verified against live Google Meet and Zoom sessions in the development environment.
+
+AutoMeet does not bypass authentication, CAPTCHAs, waiting rooms, host admission or platform security restrictions.
+
+If an automated action cannot be completed, AutoMeet reports the failure rather than pretending the meeting was successfully joined.
+
+---
+
+## Running Tests
+
+AutoMeet includes a Node.js test suite covering scheduling, validation, platform detection and meeting lifecycle behaviour.
+
+Requirements: Node.js 20 or newer.
+
+Run:
 
 ```bash
 npm test
 ```
 
-Runs 41 tests on Node 20 or newer: platform detection and URL building, validation, page-text classification for both platforms, manifest integrity, and the full lifecycle against a fake `chrome.*` API. There is no build step; the extension is plain HTML, CSS and JavaScript.
+The test suite currently contains 41 tests.
 
-### Manual checklist (needs real Chrome and accounts)
+---
 
-1. Schedule a Meet two minutes ahead: the chime and notification fire, the tab opens, the camera and mic are off, the status reaches In meeting, and it leaves at the leave time.
-2. Use a Meet that needs admission: Waiting for host, then In meeting once admitted.
-3. Choose an account that isn't signed in: Failed with a sign-in message.
-4. Repeat for Zoom, with a link that includes a passcode and one that doesn't.
-5. Close Chrome through a join time and reopen within 10 minutes (late join), then after 10 minutes ("Missed").
-6. Press **Cancel** during the countdown and confirm no tab opens. Try Emergency stop with two meetings scheduled.
+## Built With
+
+- JavaScript
+- HTML5
+- CSS3
+- Chrome Extension Manifest V3
+- Chrome Extension APIs
+- Node.js test runner
+
+---
+
+## A Little More About AutoMeet
+
+AutoMeet was built around a simple idea: managing online meetings shouldn't be another thing you have to remember.
+
+Whether it's your morning lecture, an afternoon tutorial, a virtual classroom or another meeting on your calendar, sometimes you just need something to make sure you're there on time.
+
+**Set your schedule. Let AutoMeet handle the rest.**
