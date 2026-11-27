@@ -1,0 +1,10 @@
+{
+  "name": "automeet",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AutoMeet Chrome extension. Chrome ignores this file; it only exists to run the tests with `npm test`.",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}
