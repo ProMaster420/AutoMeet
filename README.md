@@ -98,7 +98,3 @@ Runs 41 tests on Node 20 or newer: platform detection and URL building, validati
 4. Repeat for Zoom, with a link that includes a passcode and one that doesn't.
 5. Close Chrome through a join time and reopen within 10 minutes (late join), then after 10 minutes ("Missed").
 6. Press **Cancel** during the countdown and confirm no tab opens. Try Emergency stop with two meetings scheduled.
-
-## License
-
-Add a license before publishing (MIT is a common choice for a project like this).
